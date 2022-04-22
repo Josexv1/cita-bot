@@ -15,7 +15,7 @@ If you want a support for new procedure or province, open an issue or better a p
 The following things are fully supported at the moment:
 
 Procedures:
-- POLICIA - SOLICITUD ASILO
+- POLICIA - SOLICITUD ASILO (PRIMERA CITA)
 - POLICIA - RECOGIDA DE TARJETA DE IDENTIDAD DE EXTRANJERO (TIE)
 - POLICIA-AUTORIZACIÓN DE REGRESO
 - POLICIA-CARTA DE INVITACIÓN
@@ -63,6 +63,8 @@ Examples
 * `example1.py` — Recogida de tarjeta
 
 * `example2.py` — Toma de huellas
+
+* `example_asilo.py` — Primera cita asilo
 
 Options
 --------
