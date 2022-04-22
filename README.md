@@ -142,7 +142,7 @@ class CustomerProfile:
 Troubleshooting
 ---------------
 
-For Windows, escape paths with additional backslash, e.g. `C:\\Users\\lehne`
+For Windows, escape paths with additional backslash, e.g. `C:\\Users\\user\\cita-bot\\`
 
 If you feel like the script is being stuck at the office selection page — it's not, it refreshes the page 12 times (maximum allowed) until the office is found and then starts over.
 
