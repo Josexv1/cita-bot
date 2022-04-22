@@ -223,10 +223,21 @@ def init_wedriver(context: CustomerProfile):
 
 
 def try_cita(context: CustomerProfile, cycles: int = CYCLES):
+    os.system('cls' if os.name=='nt' else 'clear')
+    print("""
+          _____ _ _          _____                _       
+         / ____(_) |        |  __ \              (_)      
+        | |     _| |_ __ _  | |__) | __ _____   ___  __ _ 
+        | |    | | __/ _` | |  ___/ '__/ _ \ \ / / |/ _` |
+        | |____| | || (_| | | |   | | |  __/\ V /| | (_| |
+         \_____|_|\__\__,_| |_|   |_|  \___| \_/ |_|\__,_|
+            """)
     driver = init_wedriver(context)
     logging.basicConfig(
-        format="%(asctime)s - %(message)s", level=logging.INFO, **context.log_settings  # type: ignore
+        format="[%(asctime)s] - %(message)s", level=logging.INFO, **context.log_settings, datefmt='%d/%b/%y %H:%M'  # type: ignore
     )
+    logging.info("Starting bot")
+    logging.info("DNI: %s | NAME: %s | COUNTRY: %s | PHONE: %s | EMAIL: %s", context.doc_value, context.name, context.country, context.phone, context.email)
     if context.sms_webhook_token:
         delete_message(context.sms_webhook_token)
 
