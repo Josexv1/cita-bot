@@ -7,6 +7,7 @@ import re
 import sys
 import tempfile
 import time
+from rich.logging import RichHandler
 from base64 import b64decode
 from dataclasses import dataclass, field
 from datetime import datetime as dt
@@ -36,6 +37,15 @@ DELAY = 30  # timeout for page load
 
 speaker = new_speaker()
 
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="INFO",
+    format=FORMAT,
+    datefmt="[%X]",
+    handlers=[RichHandler(rich_tracebacks=True)],
+)  # set level=20 or logging.INFO to turn of debug
+logger = logging.getLogger("rich")
+
 
 class DocType(str, Enum):
     DNI = "dni"
@@ -45,7 +55,8 @@ class DocType(str, Enum):
 
 class OperationType(str, Enum):
     AUTORIZACION_DE_REGRESO = "20"  # POLICIA-AUTORIZACIÓN DE REGRESO
-    BREXIT = "4094"  # POLICÍA-EXP.TARJETA ASOCIADA AL ACUERDO DE RETIRADA CIUDADANOS BRITÁNICOS Y SUS FAMILIARES (BREXIT)
+    # POLICÍA-EXP.TARJETA ASOCIADA AL ACUERDO DE RETIRADA CIUDADANOS BRITÁNICOS Y SUS FAMILIARES (BREXIT)
+    BREXIT = "4094"
     CARTA_INVITACION = "4037"  # POLICIA-CARTA DE INVITACIÓN
     CERTIFICADOS_NIE = "4096"  # POLICIA-CERTIFICADOS Y ASIGNACION NIE
     CERTIFICADOS_NIE_NO_COMUN = "4079"  # POLICIA-CERTIFICADOS Y ASIGNACION NIE (NO COMUNITARIOS)
@@ -225,19 +236,16 @@ def init_wedriver(context: CustomerProfile):
 def try_cita(context: CustomerProfile, cycles: int = CYCLES):
     os.system('cls' if os.name=='nt' else 'clear')
     print("""
-          _____ _ _          _____                _       
-         / ____(_) |        |  __ \              (_)      
-        | |     _| |_ __ _  | |__) | __ _____   ___  __ _ 
+          _____ _ _          _____                _
+         / ____(_) |        |  __ \              (_)
+        | |     _| |_ __ _  | |__) | __ _____   ___  __ _
         | |    | | __/ _` | |  ___/ '__/ _ \ \ / / |/ _` |
         | |____| | || (_| | | |   | | |  __/\ V /| | (_| |
          \_____|_|\__\__,_| |_|   |_|  \___| \_/ |_|\__,_|
             """)
     driver = init_wedriver(context)
-    logging.basicConfig(
-        format="[%(asctime)s] - %(message)s", level=logging.INFO, **context.log_settings, datefmt='%d/%b/%y %H:%M'  # type: ignore
-    )
-    logging.info("Starting bot")
-    logging.info("DNI: %s | NAME: %s | COUNTRY: %s | PHONE: %s | EMAIL: %s", context.doc_value, context.name, context.country, context.phone, context.email)
+    logger.info("Starting bot")
+    logger.info("USER DATA\nDNI: %s \nNAME: %s \nCOUNTRY: %s \nPHONE: %s \nEMAIL: %s \nOperation: %s", context.doc_value, context.name, context.country, context.phone, context.email, context.operation_code.value)
     if context.sms_webhook_token:
         delete_message(context.sms_webhook_token)
 
@@ -276,23 +284,23 @@ def try_cita(context: CustomerProfile, cycles: int = CYCLES):
     result = False
     for i in range(cycles):
         try:
-            logging.info(f"\033[33m[Attempt {i + 1}/{cycles}]\033[0m")
+            logger.info(f"[Attempt {i + 1}/{cycles}]")
             result = cycle_cita(driver, context, fast_forward_url, fast_forward_url2)
         except KeyboardInterrupt:
-            raise
+            raise logger.exception("CTRL-C detected. Exiting...")
         except TimeoutException:
-            logging.error("Timeout exception")
+            logger.error("Timeout exception")
         except Exception as e:
-            logging.error(f"SMTH BROKEN: {e}")
+            logger.exception(f"Error: {e}")
             continue
 
         if result:
             success = True
-            logging.info("WIN")
+            logger.info("WIN")
             break
 
     if not success:
-        logging.error("FAIL")
+        logger.error("FAIL")
         speaker.say("FAIL")
         driver.quit()
 
@@ -301,7 +309,7 @@ def toma_huellas_step2(driver: webdriver, context: CustomerProfile):
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtFecha")))
     except TimeoutException:
-        logging.error("Timed out waiting for form to load")
+        logger.error("Timed out waiting for form to load")
         return None
 
     # Select country
@@ -329,7 +337,7 @@ def recogida_de_tarjeta_step2(driver: webdriver, context: CustomerProfile):
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtIdCitado")))
     except TimeoutException:
-        logging.error("Timed out waiting for form to load")
+        logger.error("Timed out waiting for form to load")
         return None
 
     # Select doc type
@@ -349,7 +357,7 @@ def solicitud_asilo_step2(driver: webdriver, context: CustomerProfile):
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtIdCitado")))
     except TimeoutException:
-        logging.error("Timed out waiting for form to load")
+        logger.error("Timed out waiting for form to load")
         return None
 
     # Select doc type
@@ -373,7 +381,7 @@ def brexit_step2(driver: webdriver, context: CustomerProfile):
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtIdCitado")))
     except TimeoutException:
-        logging.error("Timed out waiting for form to load")
+        logger.error("Timed out waiting for form to load")
         return None
 
     # Select doc type
@@ -393,7 +401,7 @@ def carta_invitacion_step2(driver: webdriver, context: CustomerProfile):
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtIdCitado")))
     except TimeoutException:
-        logging.error("Timed out waiting for form to load")
+        logger.error("Timed out waiting for form to load")
         return None
 
     # Select doc type
@@ -413,7 +421,7 @@ def certificados_step2(driver: webdriver, context: CustomerProfile):
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtIdCitado")))
     except TimeoutException:
-        logging.error("Timed out waiting for form to load")
+        logger.error("Timed out waiting for form to load")
         return None
 
     # Select doc type
@@ -435,7 +443,7 @@ def autorizacion_de_regreso_step2(driver: webdriver, context: CustomerProfile):
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtIdCitado")))
     except TimeoutException:
-        logging.error("Timed out waiting for form to load")
+        logger.error("Timed out waiting for form to load")
         return None
 
     # Select doc type
@@ -463,14 +471,14 @@ def body_text(driver: webdriver):
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         return driver.find_element_by_tag_name("body").text
     except TimeoutException:
-        logging.info("Timed out waiting for body to load")
+        logger.error("Timed out waiting for body to load")
         return ""
 
 
 def process_captcha(driver: webdriver, context: CustomerProfile):
     if context.auto_captcha:
         if not context.anticaptcha_api_key:
-            logging.error("Anticaptcha API key is empty")
+            logger.error("Anticaptcha API key is empty")
             return None
 
         if len(driver.find_elements_by_id("reCAPTCHA_site_key")) > 0:
@@ -482,7 +490,7 @@ def process_captcha(driver: webdriver, context: CustomerProfile):
             return None
 
     else:
-        logging.info(
+        logger.info(
             "HEY, DO SOMETHING HUMANE TO TRICK THE CAPTCHA (select text, move cursor etc.) and press ENTER"
         )
         for i in range(10):
@@ -496,8 +504,8 @@ def solve_recaptcha(driver: webdriver, context: CustomerProfile):
     if not context.recaptcha_solver:
         site_key = driver.find_element_by_id("reCAPTCHA_site_key").get_attribute("value")
         page_action = driver.find_element_by_id("action").get_attribute("value")
-        logging.info("Anticaptcha: site key: " + site_key)
-        logging.info("Anticaptcha: action: " + page_action)
+        logger.info("Anticaptcha: site key: " + site_key)
+        logger.info("Anticaptcha: action: " + page_action)
 
         context.recaptcha_solver = recaptchaV3Proxyless()
         context.recaptcha_solver.set_verbose(1)
@@ -511,13 +519,13 @@ def solve_recaptcha(driver: webdriver, context: CustomerProfile):
 
     g_response = context.recaptcha_solver.solve_and_return_solution()
     if g_response != 0:
-        logging.info("Anticaptcha: g-response: " + g_response)
+        logger.info("Anticaptcha: g-response: " + g_response)
         driver.execute_script(
             f"document.getElementById('g-recaptcha-response').value = '{g_response}'"
         )
         return True
     else:
-        logging.error("Anticaptcha: " + context.recaptcha_solver.err_string)
+        logger.error("Anticaptcha: " + context.recaptcha_solver.err_string)
         return None
 
 
@@ -537,12 +545,12 @@ def solve_image_captcha(driver: webdriver, context: CustomerProfile):
 
         captcha_result = context.image_captcha_solver.solve_and_return_solution(tmp.name)
         if captcha_result != 0:
-            logging.info("Anticaptcha: captcha text: " + captcha_result)
+            logger.info("Anticaptcha: captcha text: " + captcha_result)
             element = driver.find_element_by_id("captcha")
             element.send_keys(captcha_result)
             return True
         else:
-            logging.error("Anticaptcha: " + context.image_captcha_solver.err_string)
+            logger.error("Anticaptcha: " + context.image_captcha_solver.err_string)
             return None
     finally:
         os.unlink(tmp.name)
@@ -581,17 +589,17 @@ def find_best_date(driver: webdriver, context: CustomerProfile):
                 ):
                     return i
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             continue
 
-    logging.info(f"Nothing found for dates {context.min_date} - {context.max_date}, skipping")
+    logger.info(f"Nothing found for dates {context.min_date} - {context.max_date}, skipping")
     return None
 
 
 def select_office(driver: webdriver, context: CustomerProfile):
     if not context.auto_office:
         speaker.say("MAKE A CHOICE")
-        logging.info("Select office and press ENTER")
+        logger.info("Select office and press ENTER")
         input()
         return True
     else:
@@ -608,7 +616,7 @@ def select_office(driver: webdriver, context: CustomerProfile):
                     select.select_by_value(office.value)
                     return True
                 except Exception as e:
-                    logging.error(e)
+                    logger.error(e)
                     if context.operation_code == OperationType.RECOGIDA_DE_TARJETA:
                         return None
 
@@ -631,7 +639,7 @@ def office_selection(driver: webdriver, context: CustomerProfile):
         resp_text = body_text(driver)
 
         if "Seleccione la oficina donde solicitar la cita" in resp_text:
-            logging.info("[Step 2/6] Office selection")
+            logger.info("[Step 2/6] Office selection")
 
             # Office selection:
             time.sleep(0.3)
@@ -640,7 +648,7 @@ def office_selection(driver: webdriver, context: CustomerProfile):
                     EC.presence_of_element_located((By.ID, "btnSiguiente"))
                 )
             except TimeoutException:
-                logging.error("Timed out waiting for offices to load")
+                logger.error("Timed out waiting for offices to load")
                 return None
 
             res = select_office(driver, context)
@@ -653,21 +661,21 @@ def office_selection(driver: webdriver, context: CustomerProfile):
             btn.send_keys(Keys.ENTER)
             return True
         elif "En este momento no hay citas disponibles" in resp_text:
-            logging.info("No appointments available, refreshing page")
+            logger.warning("[Step 1/6][!!] No appointments available, refreshing page")
             time.sleep(5)
             driver.refresh()
             continue
         else:
-            logging.info("[Step 2/6] Office selection -> No offices")
+            logger.info("[Step 2/6] Office selection -> No offices")
             return None
 
 
 def phone_mail(driver: webdriver, context: CustomerProfile):
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "emailDOS")))
-        logging.info("[Step 3/6] Contact info")
+        logger.info("[Step 3/6] Contact info")
     except TimeoutException:
-        logging.error("Timed out waiting for contact info page to load")
+        logger.error("Timed out waiting for contact info page to load")
         return None
 
     element = driver.find_element_by_id("txtTelefonoCitado")
@@ -699,7 +707,7 @@ def confirm_appointment(driver: webdriver, context: CustomerProfile):
     if "CITA CONFIRMADA Y GRABADA" in resp_text:
         context.bot_result = True
         code = driver.find_element_by_id("justificanteFinal").text
-        logging.info(f"[Step 6/6] Justificante cita: {code}")
+        logger.info(f"[Step 6/6] Justificante cita: {code}")
         if context.save_artifacts:
             image_name = f"CONFIRMED-CITA-{ctime}.png".replace(":", "-")
             driver.save_screenshot(image_name)
@@ -711,7 +719,7 @@ def confirm_appointment(driver: webdriver, context: CustomerProfile):
 
         return True
     elif "Lo sentimos, el código introducido no es correcto" in resp_text:
-        logging.error("Incorrect code entered")
+        logger.error("Incorrect code entered")
     else:
         error_name = f"error-{ctime}.png".replace(":", "-")
         driver.save_screenshot(error_name)
@@ -725,15 +733,20 @@ def cycle_cita(driver: webdriver, context: CustomerProfile, fast_forward_url, fa
         try:
             driver.set_page_load_timeout(300 if context.first_load else 50)
             driver.get(fast_forward_url)
+            resp_text = body_text(driver)
+            if "ERROR [500]" in resp_text:
+                logger.error("[500] Error, switching proxy")
+                context.proxy_index += 1
+
             try:
                 driver.execute_script("window.localStorage.clear();")
                 driver.execute_script("window.sessionStorage.clear();")
             except Exception as e:
-                logging.error(e)
+                logger.error(e)
                 pass
             driver.get(fast_forward_url2)
         except TimeoutException:
-            logging.error("Timed out loading initial page")
+            logger.error("Timed out loading initial page")
             continue
         break
     context.first_load = False
@@ -742,17 +755,17 @@ def cycle_cita(driver: webdriver, context: CustomerProfile, fast_forward_url, fa
     try:
         WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "btnEntrar")))
     except TimeoutException:
-        logging.error("Timed out waiting for Instructions page to load")
+        logger.error("Timed out waiting for Instructions page to load")
         return None
 
     if os.environ.get("CITA_TEST") and context.operation_code == OperationType.TOMA_HUELLAS:
-        logging.info("Instructions page loaded")
+        logger.info("Instructions page loaded")
         return True
 
     driver.find_element_by_id("btnEntrar").send_keys(Keys.ENTER)
 
     # 2. Personal info:
-    logging.info("[Step 1/6] Personal info")
+    logger.info("[Step 1/6] Personal info")
     success = False
     if context.operation_code == OperationType.TOMA_HUELLAS:
         success = toma_huellas_step2(driver, context)
@@ -783,12 +796,12 @@ def cycle_cita(driver: webdriver, context: CustomerProfile, fast_forward_url, fa
     try:
         WebDriverWait(driver, 7).until(EC.presence_of_element_located((By.ID, "btnConsultar")))
     except TimeoutException:
-        logging.error("Timed out waiting for Solicitar page to load")
+        logger.error("Timed out waiting for Solicitar page to load")
 
     try:
         wait_exact_time(driver, context)
     except TimeoutException:
-        logging.error("Timed out waiting for exact time")
+        logger.error("Timed out waiting for exact time")
         return None
 
     # 3. Solicitar cita:
@@ -805,7 +818,7 @@ def cita_selection(driver: webdriver, context: CustomerProfile):
     resp_text = body_text(driver)
 
     if "DISPONE DE 5 MINUTOS" in resp_text:
-        logging.info("[Step 4/6] Cita attempt -> selection hit!")
+        logger.info("[Step 4/6] Cita attempt -> selection hit!")
         if context.save_artifacts:
             driver.save_screenshot(f"citas-{dt.now()}.png".replace(":", "-"))
 
@@ -823,14 +836,14 @@ def cita_selection(driver: webdriver, context: CustomerProfile):
                 position - 1
             ].send_keys(Keys.SPACE)
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             pass
 
         driver.execute_script("envia();")
         time.sleep(0.5)
         driver.switch_to.alert.accept()
     elif "Seleccione una de las siguientes citas disponibles" in resp_text:
-        logging.info("[Step 4/6] Cita attempt -> selection hit!")
+        logger.info("[Step 4/6] Cita attempt -> selection hit!")
         if context.save_artifacts:
             driver.save_screenshot(f"citas-{dt.now()}.png".replace(":", "-"))
 
@@ -846,24 +859,24 @@ def cita_selection(driver: webdriver, context: CustomerProfile):
                 driver.execute_script(f"confirmarHueco({{id: '{slot}'}}, {slot[5:]});")
                 driver.switch_to.alert.accept()
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return None
     else:
-        logging.info("[Step 4/6] Cita attempt -> missed selection")
+        logger.info("[Step 4/6] Cita attempt -> missed selection")
         return None
 
     # 6. Confirmation
     resp_text = body_text(driver)
 
     if "Debe confirmar los datos de la cita asignada" in resp_text:
-        logging.info("[Step 5/6] Cita attempt -> confirmation hit!")
+        logger.info("[Step 5/6] Cita attempt -> confirmation hit!")
         if context.current_solver == recaptchaV3Proxyless:
             context.recaptcha_solver.report_correct_recaptcha()
 
         try:
             sms_verification = driver.find_element_by_id("txtCodigoVerificacion")
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             sms_verification = None
             pass
 
@@ -871,7 +884,7 @@ def cita_selection(driver: webdriver, context: CustomerProfile):
             if sms_verification:
                 code = get_code(context)
                 if code:
-                    logging.info(f"Received code: {code}")
+                    logger.info(f"Received code: {code}")
                     sms_verification = driver.find_element_by_id("txtCodigoVerificacion")
                     sms_verification.send_keys(code)
 
@@ -890,13 +903,13 @@ def cita_selection(driver: webdriver, context: CustomerProfile):
 
             speaker.say("ENTER THE SHORT CODE FROM SMS")
 
-            logging.info("Press Any button to CLOSE browser")
+            logger.info("Press Any button to CLOSE browser")
             input()
             driver.quit()
             os._exit(0)
 
     else:
-        logging.info("[Step 5/6] Cita attempt -> missed confirmation")
+        logger.info("[Step 5/6] Cita attempt -> missed confirmation")
         if context.current_solver == recaptchaV3Proxyless:
             context.recaptcha_solver.report_incorrect_recaptcha()
         elif context.current_solver == imagecaptcha:
@@ -942,4 +955,4 @@ def add_reason(driver: webdriver, context: CustomerProfile):
             element = driver.find_element_by_id("txtObservaciones")
             element.send_keys(context.reason_or_type)
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
