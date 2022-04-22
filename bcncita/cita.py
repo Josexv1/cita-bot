@@ -653,6 +653,7 @@ def office_selection(driver: webdriver, context: CustomerProfile):
             btn.send_keys(Keys.ENTER)
             return True
         elif "En este momento no hay citas disponibles" in resp_text:
+            logging.info("No appointments available, refreshing page")
             time.sleep(5)
             driver.refresh()
             continue
