@@ -197,8 +197,11 @@ def init_wedriver(context: CustomerProfile):
 
     ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36"
 
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     options.add_experimental_option("useAutomationExtension", False)
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--ignore-ssl-errors')
+    options.add_argument("--disable-gpu")
 
     settings = {
         "recentDestinations": [{"id": "Save as PDF", "origin": "local", "account": ""}],
