@@ -14,7 +14,6 @@ from datetime import datetime as dt
 from enum import Enum
 from json.decoder import JSONDecodeError
 from typing import Any, Optional
-
 import requests
 from anticaptchaofficial.imagecaptcha import imagecaptcha
 from anticaptchaofficial.recaptchav3proxyless import recaptchaV3Proxyless
@@ -25,18 +24,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
-
 from .speaker import new_speaker
 
 __all__ = ["try_cita", "CustomerProfile", "DocType", "OperationType", "Office", "Province"]
 
-CYCLES = 144
-REFRESH_PAGE_CYCLES = 12
-
+# DEFAULT
+CYCLES = 100
+REFRESH_PAGE_CYCLES = 10
 DELAY = 30  # timeout for page load
-
 speaker = new_speaker()
 
+# Logging settings.
 FORMAT = "%(message)s"
 logging.basicConfig(
     level="INFO",
@@ -55,8 +53,7 @@ class DocType(str, Enum):
 
 class OperationType(str, Enum):
     AUTORIZACION_DE_REGRESO = "20"  # POLICIA-AUTORIZACIÓN DE REGRESO
-    # POLICÍA-EXP.TARJETA ASOCIADA AL ACUERDO DE RETIRADA CIUDADANOS BRITÁNICOS Y SUS FAMILIARES (BREXIT)
-    BREXIT = "4094"
+    BREXIT = "4094" # POLICÍA-EXP.TARJETA ASOCIADA AL ACUERDO DE RETIRADA CIUDADANOS BRITÁNICOS Y SUS FAMILIARES (BREXIT)
     CARTA_INVITACION = "4037"  # POLICIA-CARTA DE INVITACIÓN
     CERTIFICADOS_NIE = "4096"  # POLICIA-CERTIFICADOS Y ASIGNACION NIE
     CERTIFICADOS_NIE_NO_COMUN = "4079"  # POLICIA-CERTIFICADOS Y ASIGNACION NIE (NO COMUNITARIOS)
@@ -166,7 +163,7 @@ class CustomerProfile:
     email: str
     province: Province = Province.BARCELONA
     operation_code: OperationType = OperationType.TOMA_HUELLAS
-    country: str = "RUSIA"
+    country: str = "SPAIN"
     year_of_birth: Optional[str] = None
     card_expire_date: Optional[str] = None  # "dd/mm/yyyy"
     offices: Optional[list] = field(default_factory=list)
@@ -213,6 +210,8 @@ def init_wedriver(context: CustomerProfile):
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
     options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=600,800")
+    options.add_argument("--window-position=0,0");
 
     settings = {
         "recentDestinations": [{"id": "Save as PDF", "origin": "local", "account": ""}],
@@ -245,7 +244,7 @@ def try_cita(context: CustomerProfile, cycles: int = CYCLES):
             """)
     driver = init_wedriver(context)
     logger.info("Starting bot")
-    logger.info("USER DATA\nDNI: %s \nNAME: %s \nCOUNTRY: %s \nPHONE: %s \nEMAIL: %s \nOperation: %s", context.doc_value, context.name, context.country, context.phone, context.email, context.operation_code.value)
+    logger.info("USER DATA\nDNI: %s \nNAME: %s \nCOUNTRY: %s \nPHONE: %s \nEMAIL: %s \nOperation: %s\n", context.doc_value, context.name, context.country, context.phone, context.email, context.operation_code.value)
     if context.sms_webhook_token:
         delete_message(context.sms_webhook_token)
 
@@ -288,6 +287,8 @@ def try_cita(context: CustomerProfile, cycles: int = CYCLES):
             result = cycle_cita(driver, context, fast_forward_url, fast_forward_url2)
         except KeyboardInterrupt:
             logger.exception("CTRL-C detected. Exiting...")
+            driver.quit()
+            sys.exit(1)
         except TimeoutException:
             logger.error("Timeout exception")
         except Exception as e:
@@ -661,12 +662,12 @@ def office_selection(driver: webdriver, context: CustomerProfile):
             btn.send_keys(Keys.ENTER)
             return True
         elif "En este momento no hay citas disponibles" in resp_text:
-            logger.warning("[Step 1/6][!!] No appointments available, refreshing page")
+            logger.info("[Step 1/6][!!] No appointments available, refreshing page")
             time.sleep(5)
             driver.refresh()
             continue
         else:
-            logger.info("[Step 2/6] Office selection -> No offices")
+            logger.warning("[Step 1/6] Office selection -> No offices")
             return None
 
 
@@ -709,7 +710,7 @@ def confirm_appointment(driver: webdriver, context: CustomerProfile):
         code = driver.find_element_by_id("justificanteFinal").text
         logger.info(f"[Step 6/6] Justificante cita: {code}")
         if context.save_artifacts:
-            image_name = f"CONFIRMED-CITA-{ctime}.png".replace(":", "-")
+            image_name = f"/screenshots/{ctime}CONFIRMED-CITA-{ctime}.png".replace(":", "-")
             driver.save_screenshot(image_name)
             # TODO: fix saving to PDF
             # btn = driver.find_element_by_id("btnImprimir")
@@ -726,6 +727,7 @@ def confirm_appointment(driver: webdriver, context: CustomerProfile):
 
     return None
 
+
 def cycle_cita(driver: webdriver, context: CustomerProfile, fast_forward_url, fast_forward_url2):
     driver.delete_all_cookies()
     while True:
@@ -734,8 +736,7 @@ def cycle_cita(driver: webdriver, context: CustomerProfile, fast_forward_url, fa
             driver.get(fast_forward_url)
             resp_text = body_text(driver)
             if "ERROR [500]" in resp_text:
-                logger.error("[500] Error, switching proxy")
-                context.proxy_index += 1
+                logger.critical("[500] Error, switching proxy")
 
             try:
                 driver.execute_script("window.localStorage.clear();")
@@ -812,7 +813,6 @@ def cycle_cita(driver: webdriver, context: CustomerProfile, fast_forward_url, fa
     return phone_mail(driver, context)
 
 
-# 5. Cita selection
 def cita_selection(driver: webdriver, context: CustomerProfile):
     resp_text = body_text(driver)
 
