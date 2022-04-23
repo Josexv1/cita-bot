@@ -1,14 +1,14 @@
 import os
 import sys
 
-from bcncita import CustomerProfile, DocType, Office, OperationType, Province, try_cita
+from cita import CustomerProfile, DocType, Office, OperationType, Province, try_cita
 
 if __name__ == "__main__":
     customer = CustomerProfile(
         anticaptcha_api_key="... your key here ...",
         auto_captcha=False,
         auto_office=True,
-        chrome_driver_path="chromedriver.exe",
+        chrome_driver_path="chromedriver",
         save_artifacts=True,
         province=Province.MADRID,
         operation_code=OperationType.SOLICITUD_ASILO,

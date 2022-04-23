@@ -1,24 +1,27 @@
 import os
 import sys
 
-from bcncita import CustomerProfile, DocType, Office, OperationType, Province, try_cita
+from cita import CustomerProfile, DocType, Office, OperationType, Province, try_cita
 
 if __name__ == "__main__":
     customer = CustomerProfile(
         anticaptcha_api_key="... your key here ...",
         auto_captcha=False,
         auto_office=True,
-        chrome_driver_path="/usr/local/bin/chromedriver",
+        chrome_driver_path="chromedriver",
         save_artifacts=True,
-        province=Province.BARCELONA,
+        province=Province.MADRID,
         operation_code=OperationType.TOMA_HUELLAS,
-        doc_type=DocType.PASSPORT,
-        doc_value="1100123123",
-        country="RUSIA",
-        name="BORIS JOHNSON",
-        phone="600000000",
-        email="myemail@here.com",
-        offices=[Office.BARCELONA, Office.MATARO],
+        min_date="21/04/2022",
+        max_date="01/08/2022",
+        doc_type=DocType.NIE,
+        doc_value="Z0000000Y",
+        country="VENEZUELA",
+        name="Name Lastname",
+        year_of_birth="1980",
+        phone="666666666",
+        email="email@example.com",
+        offices=[],
     )
     if "--autofill" not in sys.argv:
         try_cita(context=customer, cycles=200)  # Try 200 times

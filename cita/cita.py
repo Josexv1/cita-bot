@@ -287,7 +287,7 @@ def try_cita(context: CustomerProfile, cycles: int = CYCLES):
             logger.info(f"[Attempt {i + 1}/{cycles}]")
             result = cycle_cita(driver, context, fast_forward_url, fast_forward_url2)
         except KeyboardInterrupt:
-            raise logger.exception("CTRL-C detected. Exiting...")
+            logger.exception("CTRL-C detected. Exiting...")
         except TimeoutException:
             logger.error("Timeout exception")
         except Exception as e:
@@ -307,7 +307,7 @@ def try_cita(context: CustomerProfile, cycles: int = CYCLES):
 
 def toma_huellas_step2(driver: webdriver, context: CustomerProfile):
     try:
-        WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtFecha")))
+        WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.ID, "txtIdCitado")))
     except TimeoutException:
         logger.error("Timed out waiting for form to load")
         return None
@@ -725,7 +725,6 @@ def confirm_appointment(driver: webdriver, context: CustomerProfile):
         driver.save_screenshot(error_name)
 
     return None
-
 
 def cycle_cita(driver: webdriver, context: CustomerProfile, fast_forward_url, fast_forward_url2):
     driver.delete_all_cookies()

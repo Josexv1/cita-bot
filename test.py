@@ -2,7 +2,7 @@ import logging
 import os
 import unittest
 
-from bcncita import CustomerProfile, DocType, Office, OperationType, Province, try_cita
+from cita import CustomerProfile, DocType, Office, OperationType, Province, try_cita
 
 
 class TestBot(unittest.TestCase):
@@ -11,11 +11,11 @@ class TestBot(unittest.TestCase):
             "chrome_driver_path": "chromedriver",
             "auto_office": True,
             "auto_captcha": True,
-            "name": "BORIS JOHNSON",
+            "name": "Name Lastname",
             "doc_type": DocType.PASSPORT,
             "doc_value": "132435465",
             "phone": "600000000",
-            "email": "ghtvgdr@affecting.org",
+            "email": "example@example.com",
         }
 
         customer = CustomerProfile(
