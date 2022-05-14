@@ -1,12 +1,27 @@
 Cita Helper ![Build Status](https://github.com/cita-bot/cita-bot/actions/workflows/main.yml/badge.svg)
 ===========
 
+# Future:
+
+I had a working prototype of the bot, working with proxies, and the Tor network so we could bypass the error 500, when the website banned our IP address for a few minutes, but the web updated and now they blocked most proxies and non residential IP addresses, so everything i did was useless.
+
+The bot works as expected right now with your own IP address, still you need to add more cycles as the website will block your IP after a few tries for a few minutes.
+
+As you will need to buy residential proxies, and we still don't know if it will work, i won't publish the new version of the bot.
+
+
+# About
+
 This Selenium automatization script helps to catch cita timeslot for Spanish CNP/Extranjería.
 
 Enable your speakers and wait for "ALARM ALARM ALARM" message :) Next you'll have to confirm an appointment via SMS code.
 
 It can make a reservation automatically if you set up anti-captcha, webhooks and IFTTT applet on your phone, read instructions below.
 
+
+# Bugs / Feature requests / Feedback
+
+Please Open an issue and read the messages, will try to fix and add new features as requested.
 
 Support notes
 -------------
