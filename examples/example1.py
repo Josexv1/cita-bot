@@ -14,9 +14,10 @@ if __name__ == "__main__":
         operation_code=OperationType.RECOGIDA_DE_TARJETA,
         doc_type=DocType.NIE,  # DocType.NIE or DocType.PASSPORT
         doc_value="T1111111R",  # NIE or Passport number, no spaces.
-        country="VENEZUELA",  # Country of residence
+        country="COUNTRY",  # Country of residence
         name="Name Lastname",  # Your Name
-        phone="600000000",  # Phone number (use this format, please)
+        year_of_birth="1970",  # Your year of birth
+        phone="600123456",  # Phone number (use this format, please)
         email="email@example.com",  # Email
         # Offices in order of preference
         # This selects specified offices one by one or a random one if not found.
@@ -30,7 +31,7 @@ if __name__ == "__main__":
 
         tpl = Template(
             filename=os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "bcncita/template/autofill.mako"
+                os.path.dirname(os.path.abspath(__file__)), "cita/template/autofill.mako"
             )
         )
         print(tpl.render(ctx=customer))  # Autofill for Chrome

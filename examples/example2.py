@@ -16,10 +16,10 @@ if __name__ == "__main__":
         max_date="01/08/2022",
         doc_type=DocType.NIE,
         doc_value="Z0000000Y",
-        country="VENEZUELA",
+        country="COUNTRY",
         name="Name Lastname",
         year_of_birth="1980",
-        phone="666666666",
+        phone="600123456",
         email="email@example.com",
         offices=[],
     )
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
         tpl = Template(
             filename=os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "bcncita/template/autofill.mako"
+                os.path.dirname(os.path.abspath(__file__)), "cita/template/autofill.mako"
             )
         )
         print(tpl.render(ctx=customer))  # Autofill for Chrome

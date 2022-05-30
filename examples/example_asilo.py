@@ -14,8 +14,8 @@ if __name__ == "__main__":
         operation_code=OperationType.SOLICITUD_ASILO,
         doc_type=DocType.NIE,
         doc_value="Y0000000X",
-        country="Japan",
-        name="Satoshi Nakamoto",
+        country="COUNTRY",
+        name="Name Lastname",
         year_of_birth="1970",
         phone="600123456",
         email="email@example.com",
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
         tpl = Template(
             filename=os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "bcncita/template/autofill.mako"
+                os.path.dirname(os.path.abspath(__file__)), "cita/template/autofill.mako"
             )
         )
         print(tpl.render(ctx=customer))  # Autofill for Chrome
