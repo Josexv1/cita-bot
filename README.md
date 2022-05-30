@@ -1,4 +1,4 @@
-Cita Helper ![Build Status](https://github.com/cita-bot/cita-bot/actions/workflows/main.yml/badge.svg)
+Cita Helper
 ===========
 
 # Future:
