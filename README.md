@@ -1,6 +1,14 @@
 Cita Helper
 ===========
 
+# Non-Liability Agreement
+
+THIS IS A FREE SOFTWARE, FOR PERSONAL USE.  
+
+This software is offered as it is, and i'm not responsible for the use of this software. The purpose of this software is to help the user to catch the appointment for personal use only.
+
+**DO NOT CHARGE PEOPLE TO CATCH AN APPOINTMENT WITH HELP OF THIS SOFTWARE.**
+
 # Future:
 
 I had a working prototype of the bot, working with proxies, and the Tor network so we could bypass the error 500, when the website banned our IP address for a few minutes, but the web updated and now they blocked most proxies and non residential IP addresses, so everything i did was useless.
